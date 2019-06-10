@@ -2,14 +2,21 @@ package com.example.myapplication
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Rational
+import android.util.Size
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraX
+import androidx.camera.core.Preview
+import androidx.camera.core.PreviewConfig
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.LifecycleOwner
 import com.example.myapplication.common.showToast
 import com.example.myapplication.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),LifecycleOwner {
 
     lateinit var activityMainBinding: ActivityMainBinding
     val REQUEST_CAMERA_PERMISSION = 100
@@ -37,7 +44,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startCamera() {
+        val previewConfig = PreviewConfig.Builder().apply {
+            setTargetResolution(Size(640,640))
+            setTargetAspectRatio(Rational(1,1))
+        }.build()
+        val preview = Preview(previewConfig)
 
+        preview.setOnPreviewOutputUpdateListener {
+            val parent = activityMainBinding.preview.parent as ViewGroup
+            parent.removeView(activityMainBinding.preview)
+            parent.addView(activityMainBinding.preview,0)
+            activityMainBinding.preview.surfaceTexture = it.surfaceTexture
+            updateTranformation()
+        }
+        CameraX.bindToLifecycle(this,preview)
     }
     fun askCameraPermission()
     {
